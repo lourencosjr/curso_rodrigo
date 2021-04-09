@@ -28,6 +28,13 @@ void main() async {
   });
 
   test('Chamando o httpCliente com valores corretos', () async {
+    when(httpClient.request(
+            url: anyNamed('url'),
+            method: anyNamed('method'),
+            body: anyNamed('body')))
+        .thenAnswer((_) async =>
+            {'token': faker.guid.guid(), 'name': faker.person.name()});
+
     await sut.auth(params);
     verify(
       httpClient.request(
@@ -49,6 +56,7 @@ void main() async {
 
     expect(future, throwsA(DomainError.unexpected));
   });
+
   test('Deve jogar UnexpectedError se o HttpClient retornar erro 404',
       () async {
     when(httpClient.request(
@@ -86,5 +94,20 @@ void main() async {
     final Future future = sut.auth(params);
 
     expect(future, throwsA(DomainError.invalidCredentials));
+  });
+
+  test('Deve retonar um Account se o HttpClient retornar 200', () async {
+    final accessToken = faker.guid.guid();
+
+    when(httpClient.request(
+            url: anyNamed('url'),
+            method: anyNamed('method'),
+            body: anyNamed('body')))
+        .thenAnswer((_) async =>
+            {'accessToken': accessToken, 'name': faker.person.name()});
+
+    final account = await sut.auth(params);
+
+    expect(account.token, accessToken);
   });
 }
