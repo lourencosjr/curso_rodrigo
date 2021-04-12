@@ -1,12 +1,10 @@
+import 'package:curso_rodrigo/data/http/http.dart';
+import 'package:curso_rodrigo/data/usecases/usecases.dart';
+import 'package:curso_rodrigo/domain/helpers/helpers.dart';
+import 'package:curso_rodrigo/domain/usecases/usecases.dart';
 import 'package:faker/faker.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
-
-import 'package:curso_rodrigo/domain/helpers/helpers.dart';
-import 'package:curso_rodrigo/domain/usecases/usecases.dart';
-
-import 'package:curso_rodrigo/data/http/http.dart';
-import 'package:curso_rodrigo/data/usecases/usecases.dart';
 
 class HttpClientSpy extends Mock implements HttpClient {}
 
@@ -33,7 +31,7 @@ void main() async {
             method: anyNamed('method'),
             body: anyNamed('body')))
         .thenAnswer((_) async =>
-            {'token': faker.guid.guid(), 'name': faker.person.name()});
+            {'accessToken': faker.guid.guid(), 'name': faker.person.name()});
 
     await sut.auth(params);
     verify(
@@ -109,5 +107,19 @@ void main() async {
     final account = await sut.auth(params);
 
     expect(account.token, accessToken);
+  });
+
+  test(
+      'Deve jogar um UnexpectedError se o HttpClient retornar 200 com um dado inválido',
+      () async {
+    when(httpClient.request(
+            url: anyNamed('url'),
+            method: anyNamed('method'),
+            body: anyNamed('body')))
+        .thenAnswer((_) async => {'invalidToken': 'invalidToken'});
+
+    final Future future = sut.auth(params);
+
+    expect(future, throwsA(DomainError.invalidCredentials));
   });
 }
