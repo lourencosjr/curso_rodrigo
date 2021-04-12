@@ -15,13 +15,26 @@ class HttpAdapter {
     @required String url,
     @required String method,
   }) async {
-    await client.post(Uri.parse(url));
+    final headers = {
+      'content-type': 'application;json',
+      'accept': 'application;json',
+    };
+    await client.post(Uri.parse(url), headers: headers);
   }
 }
 
 class ClientSpy extends Mock implements Client {}
 
 void main() {
+  HttpAdapter sut;
+  ClientSpy client;
+  String url;
+
+  setUp(() {
+    sut = HttpAdapter(client);
+    client = ClientSpy();
+    url = faker.internet.httpUrl();
+  });
   group('POST GROUP => ', () {
     test('Deve chamar o POST com os valores corretor', () async {
       final client = ClientSpy();
@@ -29,7 +42,15 @@ void main() {
       final url = faker.internet.httpUrl();
       await sut.request(url: url, method: 'post');
 
-      verify(client.post(Uri.parse(url)));
+      verify(
+        client.post(
+          Uri.parse(url),
+          headers: {
+            'content-type': 'application;json',
+            'accept': 'application;json',
+          },
+        ),
+      );
     });
   });
 }
